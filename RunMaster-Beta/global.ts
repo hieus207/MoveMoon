@@ -35,5 +35,4 @@ global.location = {
   protocol: "https",
 };
 
-global.myAddress = ""
-global.nft_id = ""
+global.address=""

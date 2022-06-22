@@ -7,6 +7,10 @@ import Nft from "./contract/Nft.json"
 import NftContract from "./contract/NftContract";
 import Web3 from "web3";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch, useSelector } from "react-redux";
+import { shoesSlice } from "./redux/shoesSlice";
+import { usingShoeSelector } from "./redux/selectors";
+
 
 const web3 = new Web3(new 
   Web3.providers.HttpProvider(Nft.rpc));
@@ -31,12 +35,14 @@ function Button({ onPress, label }: any) {
 }
 
 export default function WalletConnectExperience(props) {
+  const dispatch = useDispatch();
   const connector = useWalletConnect();
   const [isApprove,setApprove] = React.useState(false)
   const [isSell,setSell] = React.useState(false)
-  const [usingNFT,setUsingNFT] = React.useState({type:"Not init"})
+  const [usingNFT,setUsingNFT] = React.useState({type:"Not init",nft_id:-1,start:-1,rare:-1})
   const [currentHours,setCurrentHours] = React.useState(0)
   const [timeRemaining,setTimeRemaining] = React.useState('')
+  const [shoe,setShoe] = React.useState({})
   const setStatus = (stt) =>{
     props.setStatus(stt)
   }
@@ -67,7 +73,7 @@ export default function WalletConnectExperience(props) {
       }   
     return result
   }
-
+ 
   // CHECK APPROVE
   React.useEffect(() => {
     async function checkApprove() {
@@ -81,7 +87,14 @@ export default function WalletConnectExperience(props) {
     async function loadNFT(){
       const useNFT = await AsyncStorage.getItem("NFT");
       const NFT = JSON.parse(useNFT);
-      setUsingNFT(NFT)
+      if(NFT!=null){
+        setUsingNFT(NFT)
+      }else{
+        await AsyncStorage.setItem("NFT",JSON.stringify({type:"Not init",nft_id:-1,start:-1,rare:-1}));
+        setUsingNFT({type:"Not init",nft_id:-1,start:-1,rare:-1})
+      }
+      
+      
     }
     loadNFT()
     checkApprove()
@@ -163,8 +176,8 @@ export default function WalletConnectExperience(props) {
         if(usingNFT.nft_id==nft_id){
           // alert
           Alert.alert(
-            "Xác nhận",
-            "Bán giày đang sử dụng sẽ xoá bỏ phần thưởng dự tính!",
+            "Confirm",
+            "Selling used shoes will cancel the expected reward!",
             [
               {
                 text: "Cancel",
@@ -262,8 +275,8 @@ export default function WalletConnectExperience(props) {
     function setNFT(nft){
       try{
         Alert.alert(
-          "Chờ xác nhận",
-          "Đổi giày sẽ xoá hết tiền thưởng dự tính! Bạn chắc chứ?",
+          "Wait for confirmation",
+          "Changing shoes will erase all expected reward! Are you sure?",
           [
             {
               text: "Cancel",
@@ -283,16 +296,21 @@ export default function WalletConnectExperience(props) {
               await props.LoadNFT(true)
             } }
           ]
-        );        
+        );  
+        dispatch(
+          shoesSlice.actions.usingShoeChange(NFT)
+        );
+
       } catch (error){
         Alert.alert("Error",""+error.message,[{Text:"OK"}]);
       }
     }
     setNFT(NFT)
+    
+    
   }
 
   const ButtonUse = ()=>{
-    console.log("Dang dung")
     try{
       if(usingNFT.nft_id==props.NFT.nft_id){
         return <Text>Using to run</Text>
@@ -384,6 +402,10 @@ export default function WalletConnectExperience(props) {
     }
   },[usingNFT.nft_id])
 
+  const LogoutAndkillSession=()=>{
+    killSession();
+    props.Logout();
+  }
   const ButtonClaim = ()=>{
     if(currentHours>=3&&currentHours<9)
       return <Button onPress={claim} label="Claim" />
@@ -401,6 +423,22 @@ export default function WalletConnectExperience(props) {
     }
     else {
       global.address=connector.accounts[0];
+      if(props.onScreen=="Login"){
+        props.loggedIn()
+        // return(
+        //   <>
+          
+        //   <Text>{shortenAddress(connector.accounts[0])}</Text>
+        //   <Button onPress={killSession} label="Log out" />
+        //   </>
+        // )
+      }else
+      if(props.onScreen=="Inventory"){
+        if(connector.connected)
+        return(
+            <Button onPress={LogoutAndkillSession} label="Log out" />
+        )
+      }
       if(props.onScreen=="Home"){
         return(
           <>
@@ -448,15 +486,32 @@ export default function WalletConnectExperience(props) {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "#5A45FF",
+    backgroundColor: "rgba(255,193,64,255)",
     color: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 20,
+    width: 300,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   text: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    textAlign:"center",
+    color: "black",
+    fontSize: 20,
+    fontWeight: "bold",
+
+  },
+  btn: {
+    borderRadius: 20,
+    backgroundColor: "rgba(255,193,64,255)",
+    paddingBottom: 10,
+    paddingTop: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    width: 300,
+    alignSelf: "center",
+  },
+  btn_text: {
+    fontSize: 20,
+    fontWeight: "bold",
   },
 });

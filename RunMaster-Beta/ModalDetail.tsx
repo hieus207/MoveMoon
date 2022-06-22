@@ -6,7 +6,6 @@ export default function DetailModal(props){
     const [price,setPrice] = React.useState(0);
     const [txStatus,setTxStatus] = React.useState(0);
     const closeModal = (bool) =>{
-        console.log("da an")
         props.changeVisible(bool)
     }
     const setStatus = (stt)=>{

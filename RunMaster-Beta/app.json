@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "WalletConnectExample",
-    "slug": "WalletConnectExample",
-    "scheme": "walletconnect-example",
+    "name": "MoveMoon",
+    "slug": "MoveMoon",
+    "scheme": "move-moon",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,10 +24,9 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      },
+      "package": "com.brostechnology.movemoon",
+      "versionCode": 1
     }
   }
 }

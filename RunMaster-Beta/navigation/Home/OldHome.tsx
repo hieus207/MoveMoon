@@ -1,4 +1,4 @@
-import "./global";
+import "../../global";
 
 import * as React from "react";
 import { StatusBar } from "expo-status-bar";
@@ -8,26 +8,41 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {Pedometer} from 'expo-sensors';
 import CircularProgress from 'react-native-circular-progress-indicator';
-import WalletConnectExperience from "./WalletConnectExperience";
-
+import WalletConnectExperience from "../../WalletConnectExperience";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import { usingShoeSelector } from "../../redux/selectors";
+import { shoesSlice } from "../../redux/shoesSlice";
+import store from "../../redux/store";
 
 
 export default function HomeScreen(props) {
-  
-  const SCHEME_FROM_APP_JSON = "walletconnect-example";
+  const usingShoe = useSelector(usingShoeSelector);
+  const SCHEME_FROM_APP_JSON = "move-moon";
   const [stepCount,updateStepCount] = React.useState(0)
   const [totalReward,setTotalReward] = React.useState(0)
   const [reward,updateReward] = React.useState(0)
   const [usingNFT,setUsingNFT] = React.useState({type:"Not init",nft_id:-1,start:-1,rare:-1})
   const [PedometerAvailability, setPedometerAvailability] =
   React.useState("");
-  
 
+  const dispatch = useDispatch();
   const _retrieveData = async () => {
     console.log("Da goi vao recei data")
     const useNFT = await AsyncStorage.getItem("NFT");
     const NFT = JSON.parse(useNFT);
-    setUsingNFT(NFT)
+    if(NFT!=null){
+      setUsingNFT(NFT)
+      // dispatch(
+      //   shoesSlice.actions.usingShoeChange(NFT)
+      // );
+      console.log("state")
+      console.log(useSelector(state=>state))
+    }
+      
+    else{
+      await AsyncStorage.setItem("NFT",JSON.stringify({type:"Not init",nft_id:-1,start:-1,rare:-1}));
+      setUsingNFT({type:"Not init",nft_id:-1,start:-1,rare:-1})
+    }
 
     const ttReward = await AsyncStorage.getItem("TotalReward");
     let totalRW = JSON.parse(ttReward);
@@ -37,10 +52,6 @@ export default function HomeScreen(props) {
       }
       setTotalReward(totalRW)
     }
-      
-    
-    // console.log("Da goi set")
-    // console.log(usingNFT)
     props.LoadNFT(false)
   }
   React.useEffect(()=>{
@@ -138,7 +149,7 @@ const saveStep = async (NFT,CountStep,_TotalReward)=>{
       }
     );
   }
-
+  const st = useSelector((state)=> state.usingShoe);
 
 
   const getNFT = ()=>{
@@ -148,10 +159,13 @@ const saveStep = async (NFT,CountStep,_TotalReward)=>{
           <>
           <Text>Using NFT: {usingNFT.nft_id}</Text>
           <Text>Rare: {usingNFT.rare}</Text>
+          <Text>Using Shoe: {usingShoe.nft_id}</Text>
           </>
           )
       }
       catch(error){
+        console.log("LOIIIII")
+        console.log(st)
         return(
           <Text>Not using any NFT</Text>
         )
@@ -159,6 +173,7 @@ const saveStep = async (NFT,CountStep,_TotalReward)=>{
   }
 
   return (
+    
     <WalletConnectProvider
       redirectUrl={
         Platform.OS === "web"
@@ -170,13 +185,6 @@ const saveStep = async (NFT,CountStep,_TotalReward)=>{
       }}
     >
       <View style={styles.container}>
-
-      <ImageBackground 
-      style={{flex:1}}
-      resizeMode = 'cover'
-      source={require('./assets/running.jpg')}
-      >
-
       
       <View style={{flex:1, justifyContent:"center", alignItems:"center"}}>
       {/* TITLE */}
@@ -205,12 +213,11 @@ const saveStep = async (NFT,CountStep,_TotalReward)=>{
       <WalletConnectExperience reward={reward} onScreen={"Home"}/>
       </View> 
 
-      {/* SET BG */}
-      </ImageBackground>
 
         <StatusBar style="auto" />
       </View>
     </WalletConnectProvider>
+    
   );
 }
 
